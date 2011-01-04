@@ -1,0 +1,151 @@
+
+if [ "$1" == "no_create" ] 
+then
+  build_dir=`ls | grep -m 1 WORKING_`
+
+  mkdir $build_dir/system
+  mv $build_dir/system.img $build_dir/system
+
+else
+
+  #
+  # Check for system.img and boot.img in original_update  
+  #
+  if [ -e original_update/system.img ]
+  then
+    echo Found original_update/system.img
+    if [ -e original_update/boot.img ]
+    then
+      echo Found original_update/boot.img
+    else
+      echo "Error: No original_update/boot.img found"
+      echo
+      exit 1
+    fi
+  else
+
+    if [ -e original_update/boot.img ]
+    then
+      echo "Found original_update/boot.img"
+      echo "Error: No original_update/system.img found"
+    else
+      echo
+      echo "Error: No ROMs found under original_update folder!"
+    fi
+
+    exit 1
+  fi
+
+
+  #
+  # Working folder name
+  #
+  date_str=`date '+%m%d%y_%H%M%S'`
+  build_dir=WORKING_$date_str
+
+  echo
+  echo "Creating working folder $build_dir ..."
+  mkdir $build_dir
+  mkdir $build_dir/system
+
+  echo Copying boot.img and system.img ...
+  cp original_update/boot.img $build_dir
+  cp original_update/system.img $build_dir/system
+
+fi
+
+
+#
+# Directory tree
+#
+mkdir -p $build_dir/META-INF/com/google/android
+echo
+echo "Adding an update-script ..."
+cp tools/update_files/update-script $build_dir/META-INF/com/google/android/
+
+
+#
+# unyaffs
+#
+echo
+
+if [ `uname | grep CYGWIN` ]
+then
+  unyaffs_file=unyaffs.exe
+else
+  unyaffs_file=unyaffs
+fi
+  
+if [ -e tools/unyaffs_files/$unyaffs_file ]
+then
+  echo Found $unyaffs_file
+else
+  echo "Compiling unyaffs ..."
+  cd tools/unyaffs_files
+  gcc -o unyaffs unyaffs.c
+  cd ../..
+
+  if [ -e tools/unyaffs_files/$unyaffs_file ]
+  then
+    echo unyaffs successfully compiled
+  else
+    echo "Error: unyaffs not successfully compiled!"
+    exit 1
+  fi
+fi
+
+echo
+echo Extracting contents of system.img ...
+cd $build_dir/system
+res=`../../tools/unyaffs_files/$unyaffs_file system.img 2>/dev/null`
+
+err_code=$?
+check_dump=`ls unyaffs*stackdump* 2>/dev/null`
+
+rm system.img
+cd ..
+
+if [ "$check_dump" != "" ]
+then
+  echo
+  echo "Error:  unyaffs - stackdump file found under /system folder.  The file"
+  echo "        format used in the .img file may not be supported."
+  exit 1
+fi
+
+if [ ! -d system ]
+then
+  echo
+  echo "Error: no /system folder found!"
+  exit 1
+fi
+ 
+if [ "`ls system`" == "" ]
+then
+  echo 
+  echo "Error: /system folder is empty!"
+  
+  if [ "$err_code" == 139 ]
+  then
+    echo "Unfortunately unyaffs cannot open this system.img.  The file format"
+    echo "used in the .img file may not be supported."
+  fi
+
+  exit 1
+fi
+
+cd ..
+scripts/fix_update_script 
+
+# Modify the update-script with features found in Nandroid backup
+scripts/fix_update_script_with_features
+
+
+echo
+echo Listing of $build_dir:
+echo
+ls -l $build_dir
+
+echo
+echo "Finished setting up working folder!"
+

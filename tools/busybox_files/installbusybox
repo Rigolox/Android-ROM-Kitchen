@@ -1,0 +1,5 @@
+#!/system/bin/sh
+cd /system/xbin
+/system/bin/chmod 755 busybox
+./busybox --install -s /system/xbin
+

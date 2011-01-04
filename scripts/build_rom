@@ -1,0 +1,140 @@
+
+clear
+echo
+
+if [ -d WORKING_* ]
+then
+  echo Found working folder:
+else
+  echo No working folder found!
+  exit 0
+fi
+
+cd WORKING_*
+echo `pwd`
+echo
+ls -lrt
+cd ..
+echo
+
+
+scripts/fix_pre_build
+
+cd WORKING_*
+
+if [ 1 == 0 ]
+then
+  if [ -e META-INF/com/google/android ]
+  then
+
+    cd ..
+    scripts/verify_update_script no_clear
+
+    res=$?
+
+    if [ "$res" == "1" ]
+      then
+      echo -n "Do you want to quit building (y/n)? (default: y): "
+      read do_quit
+
+      if [ "$do_quit" != "n" ]
+      then
+        exit 0
+      fi
+    fi    
+
+    cd WORKING_*
+
+  fi
+fi
+
+
+#
+# Create update.zip
+#
+echo
+echo Making update.zip ...
+zip -r -y -q update *
+echo
+echo update.zip created, ready for signing 
+echo
+
+
+
+#
+# Sign update.zip
+#
+
+date_str=`date '+%m%d%y_%H%M%S'`
+signed_file=signed_$date_str.zip
+
+echo Signing update.zip as $signed_file ...
+
+cp ../tools/signapk_files/testkey.* .
+cp ../tools/signapk_files/signapk.jar .
+
+java -jar signapk.jar testkey.x509.pem testkey.pk8 update.zip $signed_file
+
+rm -f testkey.*
+rm -f signapk.jar
+rm -f update.zip
+
+
+if [ -e $signed_file ] && [ "$?" == "0" ]
+then
+
+  #
+  # Make output folder
+  #
+  if [ -d ../OUTPUT_ZIP ]
+  then
+    echo "Found OUTPUT_ZIP folder" 
+  else
+    echo "Creating folder OUTPUT_ZIP ..."
+    mkdir ../OUTPUT_ZIP
+  fi
+
+  mv $signed_file ../OUTPUT_ZIP/
+
+  echo
+  echo
+  echo "==========================================================="
+  echo
+  echo "Congratulations, your ROM is here:"
+  echo "OUTPUT_ZIP/$signed_file" 
+  echo
+  echo "Copy this to your device and flash from recovery menu."
+  echo 
+  echo "Remember to do a wipe if necessary!"
+
+else 
+
+  echo
+  echo "Was not able to create $signed_file!"
+  echo
+
+  if [ `uname | grep Linux` ] 
+  then
+    echo "Ensure you have a recent version of the Sun Java JDK"
+  
+  elif [ `uname | grep CYGWIN` ]
+  then
+    echo "Ensure you have the Sun Java JDK installed on your PC, and have" 
+    echo "defined the path to java.exe."
+    echo 
+    echo "e.g.  In $HOME/.bash_profile, add to the end:"
+    echo "      PATH=/cygdrive/c/Program\ Files/Java/jdk1.6.0_18/bin:\${PATH}" 
+    echo 
+    echo "      Your path may be different."
+
+  elif [ `sw_vers | grep -o Mac` ]
+  then
+    echo "You may need to install SoyLatte for Mac OS X (to replace the standard "
+    echo "Java JDK)"
+  fi
+
+fi
+
+cd ..
+
+
