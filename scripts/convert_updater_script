@@ -1,0 +1,363 @@
+
+if [ "$1" == "" ]
+then
+  clear
+fi
+
+
+echo
+
+if [ -d WORKING_* ]
+then
+
+  cd WORKING_*
+  cd META-INF/com/google/android
+
+else
+  echo
+  echo Working folder not found, you will need to create one!
+  exit 0
+fi
+
+
+if [ "$1" == "" ]
+then
+
+  echo "Conversion Tool: updater-script to update-script"
+  echo "--------------------------------------------------------------------"
+  echo
+  echo "This script will convert your updater-script into an update-script."
+  echo "Although it has been proven to work on some ROMs, it is only"
+  echo "experimental at this point in time."
+  echo
+  echo "Ensure you have an updater-script under META-INF/com/google/android"
+  echo "of your working folder."
+  echo
+  echo -n "Proceed with conversion (y/n)? (default: y): "
+
+  read proceed_now
+  echo
+
+  if [ "$proceed_now" == "n" ] 
+  then
+    cd ../../../../..
+    exit 0
+  fi
+
+  echo "--------------------------------------------------------"
+  echo
+
+fi
+
+if [ -e updater-script ]
+then
+  
+  if [ -e update-script ]
+  then
+    echo "Error: Although you have an updater-script, you also have an"
+    echo "       update-script in the same folder. Remove one of them."
+    cd ../../../../..
+    exit 0
+  fi
+
+else
+  echo "Error: updater-script not found!"
+  cd ../../../../..
+  exit 0
+fi
+
+echo "Please wait ..."
+echo
+
+
+
+more updater-script \
+| sed -e ':a;N;$!ba;s/||\n//g' \
+| sed -e ':a;N;$!ba;s/,\n//g' \
+| sed -e 's/ui_print.*//g' \
+| sed -e 's/^\([a-zA-Z_]*\)[ ]*(/\1(/g' \
+| sed -e 's/package_extract_dir(\"\([^ ]*\)\", \"\/tmp\");/copy_dir PACKAGE:\1 TMP:/g' \
+| sed -e 's/package_extract_dir(\"\([^ ]*\)\", \"\/system\");/copy_dir PACKAGE:\1 SYSTEM:/g' \
+| sed -e 's/package_extract_dir(\"\([^ ]*\)\", \"\/sdcard\");/copy_dir PACKAGE:\1 SDCARD:/g' \
+| sed -e 's/run_program("\(\/[^"]*\)", "\([^"]*\)"/run_program \1 \2/' \
+| sed -e 's/run_program("\([^"]*\)", "\([^"]*\)"/run_program PACKAGE:\1 \2/' \
+| sed -e 's/run_program("\([^"]*\)"/run_program PACKAGE:\1/' \
+| sed -e 's/run_program PACKAGE:\/data\//run_program DATA:/' \
+| sed -e 's/run_program PACKAGE:\/system\//run_program SYSTEM:/' \
+| sed -e 's/\/tmp\//TMP:/g' \
+| sed -e 's/\"TMP:\([^\"]*\)\"/TMP:\1/g' \
+| sed -e 's/\/sdcard\//SDCARD:/g' \
+| sed -e 's/\"SDCARD:\([^\"]*\)\"/SDCARD:\1/g' \
+> temp.log
+
+
+#
+# Check for all lines with boot.img
+#
+
+line_num=`grep -n -m 1 boot.img temp.log | sed 's/:.*//g'`
+
+if [ "$line_num" != "" ]
+then
+  boot_img_found=1
+else
+  boot_img_found=0
+fi
+
+while [ "$line_num" != "" ]
+do
+  sed -i -e ''$line_num' s/.*/\n/' temp.log
+  line_num=`grep -n -m 1 boot.img temp.log | sed 's/:.*//g'`
+done
+
+if [ "$boot_img_found" == "1" ]
+then
+  cat temp.log | sed '$a\write_raw_image PACKAGE:boot.img BOOT:' > temp2.log
+  mv -f temp2.log temp.log
+fi
+
+
+#
+# Remove asserts
+#
+sed -i -e 's/assert.*[;]//g' temp.log
+
+
+#
+# Remove apply_patch
+#
+sed -i -e 's/apply_patch.*[;]//g' temp.log
+
+
+
+#
+# Create the update-script
+#
+cp temp.log update-script
+cp temp.log symlinks.log
+cp temp.log delete.log
+
+
+#
+# Delete the symlinks from original file 
+#
+sed -i -e 's/symlink.*//g' update-script 
+
+#
+# Put the symlinks in another file (-n and p will grab the result of the range)
+#
+sed -i -n 's/symlink.*/&/p' symlinks.log
+
+#
+# Delete the 'delete' statements from original file
+#
+sed -i -e 's/delete(.*//g' update-script
+
+#
+# Put the 'deletes' in another file (-n and p will grab the result of the range)
+#
+sed -i -n 's/delete(.*/&/p' delete.log
+
+
+
+
+sed -i \
+-e 's/symlink("\([^"]*\)"/\1/g' \
+-e 's/);//g' \
+-e 's/[ ]*,//g' \
+-e 's/"\([^"]*\)"/\1/g' \
+symlinks.log
+
+sed -i \
+-e 's/delete("\([^"]*\)"/\1/g' \
+-e 's/);//g' \
+-e 's/[ ]*,//g' \
+-e 's/"\([^"]*\)"/\1/g' \
+delete.log
+
+
+
+symlink_lines=`wc -l symlinks.log | sed -e 's/\([0-9]*\).*/\1/g'`
+
+for (( i=1; i <= $symlink_lines; i++ ))
+do
+  # Go to line number 'i' and grab the first word
+  symtype=`sed -n ''$i' s/\([^ ]*\) .*/\1/p' symlinks.log`
+
+  # Substitute special characters because they mess up variable substitution
+  symtype=`echo $symtype | sed -e 's/\./temp_period/g' -e 's/\//temp_slash/g'`
+
+  # Remove that first word from each line
+  sed -i -e ''$i' s/[^ ]* \(.*\)/\1/g' symlinks.log
+
+  # Remove all blank spaces from each line
+  sed -i -e ''$i' s/\t/ /g' symlinks.log  
+  sed -i -e ''$i' s/   //g' symlinks.log
+  sed -i -e ''$i' s/  / /g' symlinks.log
+
+  # Replace every word in each line with a symlink statement
+  sed -i -e "$i s/\([^ ]*\)/symlink $symtype \1/g" symlinks.log 
+
+done
+
+
+delete_lines=`wc -l delete.log | sed -e 's/\([0-9]*\).*/\1/g'`
+
+for (( i=1; i <= $delete_lines; i++ ))
+do
+  # Substitute special characters because they mess up variable substitution
+  symtype=`echo $symtype | sed -e 's/\./temp_period/g' -e 's/\//temp_slash/g'`
+
+  # Remove all blank spaces from each line
+  sed -i -e ''$i' s/\t/ /g' delete.log  
+  sed -i -e ''$i' s/   //g' delete.log
+  sed -i -e ''$i' s/  / /g' delete.log
+
+  # Add 'delete' to every line
+  sed -i -e "$i s/\([^ ]*\)/delete \1/g" delete.log 
+
+done
+
+sed -i \
+-e 's/temp_period/\./g' -e 's/temp_slash/\//g' \
+-e 's/symlink/\nsymlink/g' \
+-e 's/\/system\//SYSTEM:/g' \
+-e 's/symlink SYSTEM:/symlink \/system\//g' \
+-e 's/\(symlink [^ ]* [^ ]*\)[ ]*/\1/g' \
+symlinks.log
+
+sed -i \
+-e 's/temp_period/\./g' -e 's/temp_slash/\//g' \
+-e 's/delete/\ndelete/g' \
+-e 's/\/system\//SYSTEM:/g' \
+-e 's/\(delete [^ ]*\)[ ]*/\1/g' \
+delete.log
+
+
+
+
+
+#
+# Fix up the update-script without the other .log files for now
+#
+
+sed -i \
+-e 's/;//g' \
+-e 's/,//g' \
+-e 's/(/ /g' \
+-e 's/)//g' \
+-e 's/^mount .*//g' \
+-e 's/^unmount .*//g' \
+-e 's/package_extract_dir \"\([^ ]*\)/copy_dir PACKAGE:\1/g' \
+-e 's/\/system\//SYSTEM:/g' \
+-e 's/\/system/SYSTEM:/g' \
+-e 's/\"system\"/SYSTEM:/g' \
+-e 's/\"SYSTEM:\"/SYSTEM:/g' \
+-e 's/\" SYSTEM/ SYSTEM/g' \
+-e 's/\"SYSTEM:\([^\"]*\)\"/SYSTEM:\1/g' \
+-e 's/\/data\//DATA:/g' \
+-e 's/\/data/DATA:/g' \
+-e 's/\"data\"/DATA:/g' \
+-e 's/\"DATA:\"/DATA:/g' \
+-e 's/\" DATA/ DATA/g' \
+-e 's/\/cache\//CACHE:/g' \
+-e 's/\/cache/CACHE:/g' \
+-e 's/\"cache\"/CACHE:/g' \
+-e 's/\"CACHE:\"/CACHE:/g' \
+-e 's/\" CACHE/ CACHE/g' \
+-e 's/\"MTD //g' \
+-e 's/set_perm\([^\"]*\)\"\([^\"]*\)\"/set_perm\1\2/g' \
+-e 's/\"\([^\"]*\)\"/\1/g' \
+-e 's/^[ ]*//g' \
+-e 's/\/$//g' \
+update-script
+
+
+
+
+
+
+#
+# Hack for cases where 'package_extract_file' is used
+#
+
+line_num=`grep -n -m 1 package_extract_file update-script | sed 's/:.*//g'`
+
+while [ "$line_num" != "" ]
+do
+
+  file_path=`grep -m 1 package_extract_file update-script | sed 's/package_extract_file \([^\ ]*\) .*/\1/g'`
+  file_name=`grep -m 1 package_extract_file update-script | sed 's/[^:]*[:]*\(.*\)/\1/g'`
+  root_name=`grep -m 1 package_extract_file update-script | sed 's/package_extract_file [^\ ]* \([^:]*\):.*/\1/g'`
+  new_dir=$file_name.dir 
+
+  if [ ! -d ../../../../$new_dir ]
+  then
+    mkdir ../../../../$new_dir/
+    cp -f ../../../../$file_path ../../../../$new_dir/
+  fi
+
+  new_line="copy_dir PACKAGE:$new_dir $root_name:"
+  grep_found=`grep -c "$new_line" update-script`
+
+  if [ "$grep_found" == "0" ]
+  then
+    sed -i -e ''$line_num' s/.*/'"$new_line"'/g' update-script
+  else
+    sed -i -e ''$line_num' s/.*//g' update-script
+  fi
+
+  line_num=`grep -n -m 1 package_extract_file update-script | sed 's/:.*//g'`
+done
+
+
+
+#
+# Add other .log files into the update-script
+#
+
+line_num=`grep -n -m 1 "copy_dir PACKAGE:system SYSTEM:" update-script | sed 's/:.*//g'`
+line_num=$(($line_num-1))
+if [ "$line_num" == "-1" ] || [ "$line_num" == "0" ]
+then
+  line_num=1
+fi
+sed -i -e ''$line_num' r delete.log' update-script
+
+sed -i -e '/copy_dir PACKAGE:system SYSTEM:/r symlinks.log' update-script
+
+
+
+# Remove blank lines
+sed -i -e '/^$/d' update-script
+
+rm symlinks.log
+rm delete.log
+rm temp.log
+
+if [ -e update-script ]
+then
+
+  mv -f updater-script updater-script.orig
+
+  echo "An update-script has been created under META-INF/com/google/android"
+  echo "of your working folder.  Please review it for potential errors."
+  echo ""
+  echo "The original updater-script has been renamed to updater-script.orig."
+  echo "Remove it if you no longer need it."
+
+  if [ -e update-binary ]
+  then
+    mv -f update-binary update-binary.orig
+
+    echo
+    echo "The update-binary has also been renamed to update-binary.orig."
+    echo "Remove it if you no longer need it."
+  fi
+
+else
+  echo "Error: update-script not created!"
+fi
+
+cd ../../../../..
+

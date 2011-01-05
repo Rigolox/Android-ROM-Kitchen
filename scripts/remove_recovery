@@ -1,0 +1,52 @@
+
+cd WORKING_*
+
+if [ -e META-INF/com/google/android/update-script ]
+then
+
+  cd META-INF/com/google/android
+
+  #
+  # Remove installation of recovery image
+  #
+
+  sed -i \
+    -e 's/copy_dir PACKAGE:recovery SYSTEM://g' \
+    -e 's/set_perm 0 0 0544 SYSTEM:etc\/install-recovery.sh//g' \
+  update-script
+
+
+  #
+  # Remove the assert command for installing radio in OTA update
+  #
+
+  sed -i -e ':a;N;$!ba;s/,\n//g' -e 's/assert(htc.install_radio[^;]*[;]//' update-script
+
+  #
+  # Remove any "delete SYSTEM:bin...." lines in OTA update  
+  #
+
+  sed -i -e 's/delete SYSTEM:bin[^\n]*[\n]*//g' update-script
+
+  cd ../../../../..
+
+  scripts/fix_update_script_blanks
+
+
+else
+  cd ..
+fi  
+
+
+cd WORKING_*
+
+if [ -d recovery ]
+then
+  echo
+  echo "Removing recovery folder ..."
+  rm -rf recovery
+fi
+
+
+cd ..
+
