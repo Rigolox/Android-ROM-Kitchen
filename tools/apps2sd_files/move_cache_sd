@@ -1,9 +1,0 @@
-#!/system/bin/sh
-
-/system/bin/mkdir /system/sd/dalvik-cache
-/system/bin/chmod 777 /system/sd/dalvik-cache
-/system/bin/cp /data/dalvik-cache/* /system/sd/dalvik-cache
-/system/bin/rm -rf /data/dalvik-cache
-/system/bin/ln -s /system/sd/dalvik-cache /data/dalvik-cache
-echo x > /data/.dalvikcache
-
