@@ -8,7 +8,6 @@ then
   exit 0
 fi
 
-scripts/ensure_boot_extracted
 
 clear
 echo
@@ -33,15 +32,6 @@ then
 else
   exit 0
 fi
-
-if [ -d BOOT-EXTRACTED ] 
-then
-  echo
-else
-  echo "BOOT-EXTRACTED folder not found"
-  exit 0
-fi
-
 
 
 #
@@ -106,7 +96,9 @@ cd ../..
 # Check root
 #
 
-cd BOOT-EXTRACTED/boot.img-ramdisk
+cd WORKING_*
+cd system
+
 grep_root=`grep -m 1 ro.secure default.prop`
 
 if [ "$grep_root" == "ro.secure=1" ] 
@@ -151,20 +143,6 @@ else
 fi
 
 cd ..
-
-
-#
-# Check apps2sd
-#
-
-scripts/a2sd_exists
-
-if [ "$?" == "1" ]
-then
-  apps2sd_status=YES
-else
-  apps2sd_status=NO
-fi
 
 
 
@@ -271,12 +249,14 @@ cd ..
 
 
 #
-# Check if ROM contains radio.img
+# Check if ROM contains modem.bin
+# Need to make this a little more thorough.  Also want to add
+# the ability to have the user drop their own modem in.
 #
 
 cd WORKING_*
 
-if [ -e radio.img ]
+if [ -e modem.bin ]
 then
   radio_status=YES
 else
@@ -331,25 +311,6 @@ fi
 cd ../../../../..
 
 
-#
-# Check for BusyBox run-parts method
-#
-
-cd BOOT-EXTRACTED/boot.img-ramdisk
-
-test_start=`grep -c "start sysinit" init.rc`
-test_service=`grep -c "service sysinit" init.rc`
-
-if [[ "$test_start" == "0" || "$test_service" == "0" ]] 
-then
-  runparts_status=NO
-else
-  runparts_status=YES
-fi
-
-cd ../..
-
-
 
 
 
@@ -361,11 +322,10 @@ echo "-------------------------------------"
 echo
 echo " Android OS version             : $android_os"
 echo " ROM Name                       : $rom_name"
-echo " Rooted (unsecured boot.img)    : $unsecure_status"
+echo " Rooted (unsecured boot)        : $unsecure_status"
 echo " Rooted (Superuser.apk + su)    : $su_status"
 echo " BusyBox installed              : $bb_status"
-echo " BusyBox run-parts support      : $runparts_status"
-echo " Apps2SD enabled                : $apps2sd_status" 
+
 
 if [ "$is_old" == "1" ]; then
 echo " Wireless tethering installed   : $tether_status"
@@ -377,7 +337,7 @@ echo " Nano text editor installed     : $nano_status"
 echo " Bash shell support             : $bash_status"
 echo " /system/framework is deodexed  : $deodex_fr_status"
 echo " /system/app is deodexed        : $deodex_app_status"
-echo " radio.img found                : $radio_status"
+echo " modem.bin found                : $radio_status"
 echo " ROM will wipe all data         : $wipe_status"
 echo
 
