@@ -18,7 +18,7 @@ echo "The following will be done for root:"
 echo
 echo "- Add Superuser.apk and su"
 echo "- Add necessary lines to the update-script"
-echo "- Update default.prop in the ramdisk"
+echo "- Update default.prop"
 echo 
 echo "--------------------------------------------"
 echo
@@ -114,7 +114,7 @@ cd ../..
 
 
 scripts/add_su_to_update_script
-scripts/do_root_boot_img
+scripts/do_root_secure
 
 
 echo 
