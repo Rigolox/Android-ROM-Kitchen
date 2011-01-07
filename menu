@@ -20,13 +20,14 @@ do
  echo 
  echo "============================================================"
  echo " SGS Android Kitchen $version - by RMGeren (xda-developers.com)"
+ echo
+ echo "        Based on the HTC Android Kitchen - by dsixda" 
  echo "============================================================"
  echo
  echo "  1 - Set up working folder from ROM"
  echo "  2 - Add root permissions"
  echo "  3 - Add BusyBox"
  echo "  4 - Disable boot screen sounds"
- echo "  5 - N/A"
  echo "  5 - Zipalign all *.apk files to optimize RAM usage"
  echo "  6 - Change wipe status of ROM"
  echo "  7 - Change name of ROM"
