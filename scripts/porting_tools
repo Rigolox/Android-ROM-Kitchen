@@ -21,7 +21,6 @@ do
   echo 
 
   echo "  a = Port ROM from another device"
-  echo "  e = Extract kernel and modules from another ROM"
   echo "  x = Exit"
   echo
   echo -n "? "
@@ -31,9 +30,6 @@ do
   if [ "$enterLetter" == "a" ]
   then
     scripts/port_rom
-  elif [ "$enterLetter" == "e" ]
-  then
-    scripts/call_extract_kernel_and_modules
   elif [ "$enterLetter" == "x" ]
   then
     exit 0

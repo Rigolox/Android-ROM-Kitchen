@@ -1,6 +1,3 @@
-
-scripts/extract_kernel_and_modules for_porting
-
 if [ -e device.cfg ]
 then
   my_device=`cat device.cfg`
