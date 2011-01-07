@@ -1,29 +1,6 @@
 
-chmod 755 tools/extract_boot_files/extract-*.pl
-chmod 755 tools/mkboot/*
 chmod 755 tools/unyaffs_files/*
 chmod 755 tools/zipalign_files/*
 rm -f symlinks.log
-
-bin_list=( mkbootfs mkbootfs.exe mkbootimg mkbootimg.exe )
-
-for mkboot_bin in ${bin_list[@]}
-do
-  if [ -e tools/mkboot/$mkboot_bin ]
-  then
-    rm tools/mkboot/$mkboot_bin
-  fi
-done
-
-
-bin_list=( unyaffs unyaffs.exe )
-
-for unyaffs_bin in ${bin_list[@]}
-do
-  if [ -e tools/unyaffs_files/$unyaffs_bin ]
-  then
-    rm tools/unyaffs_files/$unyaffs_bin
-  fi
-done
 
 
