@@ -1,5 +1,8 @@
 
-chmod 755 tools/unyaffs_files/*
+if [ ! -d ./original_update ]
+then mkdir original_update
+fi
+
 chmod 755 tools/zipalign_files/*
 rm -f symlinks.log
 

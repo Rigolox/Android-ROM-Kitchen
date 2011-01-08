@@ -6,6 +6,7 @@ echo
 echo " - A ZIP file for a cooked ROM  (e.g. update.zip)"
 echo " - A ZIP file containing *.img  (e.g. rom.zip from shipped ROM)"
 echo " - boot.img + system.img        (e.g. from shipped ROM or Nandroid)"
+echo " - A ZIP file containing a leaked rom (or Odin update)"
 echo
 
 scripts/make_backup_working

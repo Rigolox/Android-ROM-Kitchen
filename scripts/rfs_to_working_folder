@@ -1,0 +1,61 @@
+
+update_file=$1
+ 
+echo "Selected $update_file"
+
+#
+# Working folder name
+#
+date_str=`date '+%m%d%y_%H%M%S'`
+build_dir=WORKING_$date_str
+
+#
+# Creating folder structure
+#
+echo
+echo "Creating working folder $build_dir ..."
+mkdir $build_dir
+
+echo "Copying $update_file to $build_dir ..."
+cp original_update/$update_file $build_dir
+
+echo
+echo "Extracting ROM ..."
+cd $build_dir
+unzip -q $update_file
+
+#
+# Untars the modem
+#
+
+grep_md5=`find . | grep -i \\.md5$ | sed 's/ /temp_space/g' 2>/dev/null`
+
+for filename in $grep_md5 
+do
+  filename=`echo $filename | sed 's/temp_space/ /g'`
+  mv $filename ${filename%.*}
+done
+
+grep_tar=`find . | grep -i \\.tar$ | sed 's/ /temp_space/g' 2>/dev/null`
+
+for filename in $grep_tar
+do
+  filename=`echo $filename | sed 's/temp_space/ /g'`
+  tar -xvf $filename $update_dir
+done
+
+rm -f $update_file
+
+#
+# Mount filesystems and copy all the good stuff
+#
+
+mkdir ./system
+mkdir ./data
+sudo mkdir /mnt/factoryfs
+sudo mount -o loop ./factoryfs.rfs /mnt/factoryfs
+cp -rf /mnt/factoryfs ./system
+sudo umount /mnt/factoryfs
+
+cd ..
+scripts/press_enter
