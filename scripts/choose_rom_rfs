@@ -1,0 +1,110 @@
+
+zip_cmd=`ls original_update | grep -i -m 1 \\.zip$`
+
+if [ "$zip_cmd" == "" ] && [ "$zip_cmd2" == "" ]
+then
+
+  #
+  # Check for system.img and boot.img in original_update  
+  #
+  if [ -e original_update/system.img ]
+  then
+
+    if [ ! -e original_update/boot.img ]
+    then
+      echo "Error: system.img found but no boot.img!"
+      exit 0
+    fi
+
+  else
+
+    if [ -e original_update/boot.img ]
+    then
+      echo "Error: No original_update/system.img found"
+    else
+      echo
+      echo "Error: No ROMs found under original_update folder!"
+    fi
+
+    exit 0
+  fi
+
+fi
+
+
+cd original_update
+
+grep_cmd1=`find . | grep -i \\.zip$ | sed 's/ /temp_space/g' 2>/dev/null`
+grep_cmd2=`find system.img 2>/dev/null`
+
+if [ "$grep_cmd2" != "" ] && [ "`find boot.img 2>/dev/null`" == "" ]
+then
+  grep_cmd2=
+fi
+
+grep_cmd=`echo $grep_cmd1 $grep_cmd2 | sed -e 's/\.\///g' | sort -f`
+
+
+
+count=0
+rm -f ../temp.list
+
+echo >> ../temp.list
+echo "Available ROMs:" >> ../temp.list
+echo >> ../temp.list
+
+for filename in $grep_cmd 
+do
+  count=$(($count+1))
+
+  filename=`echo $filename | sed 's/temp_space/ /g'`
+
+  # Store file names in an array
+  file_array[$count]=$filename
+
+  if [ "$filename" == "system.img" ]
+  then
+    filename="system.img and boot.img"
+  fi
+
+  echo "  ($count) $filename" >> ../temp.list
+done
+
+more ../temp.list
+rm -f ../temp.list
+
+cd ..
+
+echo
+echo -n "Enter file number (0 = cancel): "
+
+
+read enterNumber
+echo
+
+if [ "$enterNumber" == "0" ]
+then
+  exit 0
+
+# Verify input is a number
+elif [ "`echo $enterNumber | sed 's/[0-9]*//'`" == "" ]
+then
+
+  file_chosen=${file_array[$enterNumber]}
+
+  if [ "$file_chosen" == "" ]
+  then
+    exit 0
+  fi
+
+  if [ "$file_chosen" == "system.img" ]
+  then
+    scripts/img_files_to_working_folder
+    exit $?
+  else
+    scripts/rfs_to_working_folder "$file_chosen"
+    exit $?
+  fi
+fi
+
+
