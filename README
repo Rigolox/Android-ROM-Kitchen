@@ -1,3 +1,11 @@
+Scripts to handle kernel and modem are incomplete.  So close....
+
+If you want to use this kitchen, follow the setup instructions here:
+http://forum.xda-developers.com/showpost.php?p=5626300&postcount=3
+
+You can download this kitchen by using:
+git clone git://github.com/rmgeren/Android-ROM-Kitchen.git
+
 Version 0.1
 ----------------
 Initial commit, directly from dsixda's HTC Android Kitchen.
