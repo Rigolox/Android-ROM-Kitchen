@@ -170,24 +170,6 @@ fi
 
 
 #
-# Check for apps2sd
-#
-
-scripts/a2sd_exists
-
-if [ "$?" == "1" ]
-then
-  echo
-  echo "Detected apps2sd"
-  scripts/add_apps2sd_files
-  scripts/add_apps2sd_to_update_script
-fi
-
-echo
-
-
-
-#
 # Check for bash (check after apps2sd because it adds bash)
 #
 
