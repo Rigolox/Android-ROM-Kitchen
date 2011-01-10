@@ -1,0 +1,38 @@
+
+cd WORKING_*
+
+if [ -e modem.bin]
+then
+  mv modem.bin ./updates/
+else
+  echo "Modem not found!"
+fi
+
+if [ ! -d updates ]
+then
+  mkdir updates
+  cp ../tools/redbend_ua ./updates/
+fi
+
+cd META-INF/com/google/android
+
+if [ -e update-script ]
+then
+
+  if [ "`grep -c \"copy_dir PACKAGE:updates TMP:/updates" update-script`" != "0" ]
+  then
+    echo "update-script creates tmp directory"
+  else
+    echo "copy_dir PACKAGE:updates TMP:/updates" >> update-script
+    echo "set_perm 0 0 755 TMP:/updates/redbend_ua" >> update-script
+  fi
+
+  echo "run_program /tmp/updates/redbend_ua restore /tmp/updates/modem.bin /dev/block/bml12" >> update-script
+
+else
+
+  echo "Error: No update-script found!"
+
+fi
+
+cd ../../../../..
