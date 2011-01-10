@@ -34,8 +34,19 @@ do
  echo "  8 - Check update-script for errors"
  echo "  9 - Show working folder information"
  echo " 10 - Set up working folder for Samsung leak"
+ echo " 11 - Deodex files in your ROM"
+ echo " 12 - Add task killer tweak for speed (stock ROM only)"
+ echo " 13 - Add /data/app functionality"
+ echo " 14 - Add Nano text editor + sysro/sysrw"
+ echo " 15 - Add Bash (command shell)"
+ echo " 16 - Add /etc/init.d scripts"
+ echo " 17 - Add custom boot animation functionality"
+ echo " 18 - Sign APK file(s)"
+ echo " 19 - Convert update-script or updater-script"
+ echo " 20 - Run plugin scripts"
+ echo " 21 - Add kernel to ROM"
+ echo " 22 - Add modem to ROM" 
  echo 
- echo "  0 - ADVANCED OPTIONS"
  echo " 99 - Build ROM from working folder"
  echo
  echo "  u - Update/About kitchen"
@@ -54,11 +65,22 @@ do
    8) scripts/verify_update_script; continue;;
    9) scripts/show_rom_info;;
   10) clear; scripts/choose_rom_rfs; continue;;
-   0) scripts/menu_advanced $version; continue;;
-   99) scripts/build_rom;;
-   u) scripts/about $version; continue;;
-   x) scripts/init_kitchen; clear; echo; echo "Goodbye."; echo; exit 1;;
-   *) echo "Invalid option"; continue;;
+  11) scripts/do_deodex; continue;; 
+  12) scripts/task_killer;;
+  13) scripts/add_data_app show_help;;
+  14) scripts/add_nano show_help;;
+  15) scripts/add_bash show_help;;
+  16) scripts/add_busybox_run_parts show_help;;
+  17) scripts/add_custom_boot_anim;;
+  18) scripts/sign_apks; continue;;
+  19) scripts/update_script_convert_menu; continue;;
+  20) scripts/run_plugins; continue;;
+  21) scripts/add_kernel_to_update_script;;
+  22) scripts/add_modem_to_update_script;;
+  99) scripts/build_rom;;
+  u) scripts/about $version; continue;;
+  x) scripts/init_kitchen; clear; echo; echo "Goodbye."; echo; exit 1;;
+  *) echo "Invalid option"; continue;;
  esac
 
   scripts/press_enter
