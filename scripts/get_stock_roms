@@ -1,0 +1,39 @@
+ echo 
+ echo "Choose a ROM"
+ echo "============================================================"
+ echo
+ echo "  1 - UGJL2 - GT-I9000m Bell Canada Samsung Galaxy S Vibrant"
+ echo "  2 - XXJPY - GT-I9000 Samsung Galaxy S (Europe)"
+ echo "  x - Exit"
+ echo ""
+ echo -n "Enter option: "
+ read opt
+ case $opt in
+ 
+ if [ "$opt" == "1" ]
+ then
+   cd original_update
+   if [ -e UGJL2.zip ]
+     then 
+       echo "UGJL2.zip already found!
+     else
+       wget http://www.mediafire.com/?wy5gy05ehj5xcbr
+   fi
+ elif [ "$opt" == "2" ]
+ then
+   cd original_update
+   if [ -e XXJPY.zip ]
+     then 
+       echo "XXJPY.zip already found!
+     else
+       wget http://www.mediafire.com/?wtk4dqtjzxhh63p
+   fi
+ elif [ "$opt" == "x" ]
+ then
+    echo "Cancelled"
+    cd ../..
+    exit 0
+  fi
+fi
+
+cd ../..
