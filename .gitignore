@@ -1,0 +1,8 @@
+# Always ignore .DS_Store
+.DS_Store
+
+# Don't include original_update or working directories.
+WORKING*
+original_update
+OUTPUT_ZIP
+
