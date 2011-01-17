@@ -24,6 +24,7 @@ do
  echo "        Based on the HTC Android Kitchen - by dsixda" 
  echo "============================================================"
  echo
+ echo " 81 - Get stock ROMs"
  echo "  1 - Set up working folder from ROM"
  echo "  2 - Add root permissions"
  echo "  3 - Add BusyBox"
@@ -55,6 +56,7 @@ do
  echo -n "Enter option: "
  read opt
  case $opt in
+  81) scripts/get_stock_roms; continue;;
    1) clear; scripts/check_rom; continue;;
    2) scripts/do_root; continue;;
    3) scripts/add_busybox show_help;;

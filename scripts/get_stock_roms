@@ -1,32 +1,57 @@
+clear
+
  echo 
- echo "Choose a ROM"
+ echo "Choose a Stock ROM to download."
+ echo "Base files are ~200Mb."
  echo "============================================================"
  echo
- echo "  1 - UGJL2 - GT-I9000m Bell Canada Samsung Galaxy S Vibrant"
+ echo "  1 - UGJL2 - GT-I9000m Bell Canada Galaxy S Vibrant"
  echo "  2 - XXJPY - GT-I9000 Samsung Galaxy S (Europe)"
+ echo "  3 - UXJL1 - SGH-I896 Rogers Canada Galaxy S Captivate"
+ echo "  4 - TLJL3 - T-959 Telus Canada Galaxy S Fascinate" 
  echo "  x - Exit"
  echo ""
  echo -n "Enter option: "
  read opt
  case $opt in
  
+ cd original_update
+ 
  if [ "$opt" == "1" ]
  then
-   cd original_update
    if [ -e UGJL2.zip ]
      then 
        echo "UGJL2.zip already found!
      else
+       echo "Downloading UGJL2.zip"
        wget http://www.mediafire.com/?wy5gy05ehj5xcbr
    fi
  elif [ "$opt" == "2" ]
  then
-   cd original_update
    if [ -e XXJPY.zip ]
      then 
        echo "XXJPY.zip already found!
      else
+       echo "Downloading XXJPY.zip"
        wget http://www.mediafire.com/?wtk4dqtjzxhh63p
+   fi
+ elif [ "$opt" == "3" ]
+ then
+   if [ -e UXJL1.zip ]
+     then 
+       echo "UXJL1.zip already found!
+     else
+       echo "Downloading UXJL1.zip"
+       wget http://www.mediafire.com/?
+   fi
+    elif [ "$opt" == "4" ]
+ then
+   if [ -e TLJL3.zip ]
+     then 
+       echo "TLJL3.zip already found!
+     else
+       echo "Downloading TLJL3.zip"
+       wget http://www.mediafire.com/?
    fi
  elif [ "$opt" == "x" ]
  then
@@ -37,3 +62,5 @@
 fi
 
 cd ../..
+
+scripts/press_enter
