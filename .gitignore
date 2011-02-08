@@ -3,6 +3,7 @@
 
 # Don't include original_update or working directories.
 WORKING*
+.project
 original_update
 OUTPUT_ZIP
 
